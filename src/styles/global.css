@@ -1,0 +1,84 @@
+:root {
+  --bg: #0b1220;
+  --card: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(255, 255, 255, 0.14);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.65);
+  --primary: #7c5cff;
+  --ok: #22c55e;
+  --danger: #ff4d6d;
+
+  --radius: 16px;
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: radial-gradient(1200px 600px at 20% 10%, rgba(124,92,255,0.35), transparent 60%),
+  radial-gradient(900px 500px at 70% 30%, rgba(34,197,94,0.25), transparent 55%),
+  linear-gradient(180deg, #070b14, #0b1220 55%, #070b14);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "PingFang SC", "Microsoft YaHei";
+}
+
+a { color: rgba(255,255,255,0.85); text-decoration: none; }
+a:hover { opacity: 0.92; text-decoration: underline; }
+
+.container {
+  width: min(1080px, 92vw);
+  margin: 0 auto;
+}
+
+.card {
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: transform .08s ease, background .2s ease, border-color .2s ease;
+}
+.btn:hover { background: rgba(255,255,255,0.12); }
+.btn:active { transform: translateY(1px); }
+.btn.primary {
+  background: linear-gradient(135deg, rgba(124,92,255,0.95), rgba(124,92,255,0.55));
+  border-color: rgba(124,92,255,0.45);
+}
+
+.input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.22);
+  color: var(--text);
+  outline: none;
+}
+.input:focus {
+  border-color: rgba(124,92,255,0.7);
+  box-shadow: 0 0 0 4px rgba(124,92,255,0.18);
+}
+
+.label { font-size: 12px; color: var(--muted); }
+.help { font-size: 12px; color: var(--muted); }
+
+.alert {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.20);
+}
+.alert.error { border-color: rgba(255,77,109,0.35); color: rgba(255,200,210,0.95); }
+.alert.ok { border-color: rgba(34,197,94,0.35); color: rgba(200,255,220,0.95); }
