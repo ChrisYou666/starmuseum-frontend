@@ -1,6 +1,8 @@
+// src/api/request.js
 import axios from "axios";
 import { ENDPOINTS } from "@/api/endpoints";
 import { readAuth, writeAuth, clearAuth } from "@/utils/authStorage";
+import { unwrapDeep } from "@/api/unwrap";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -43,13 +45,20 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 响应拦截：401 自动 refresh + 重放
+// 响应拦截：401 自动 refresh + 重放；403 直接清 token 回登录
 api.interceptors.response.use(
   (resp) => resp,
   async (error) => {
     const status = error?.response?.status;
     const originalRequest = error?.config;
 
+    // ✅ 403：鉴权失败/无权限，直接回登录（你阶段2要求）
+    if (status === 403) {
+      goLoginHard();
+      return Promise.reject(error);
+    }
+
+    // 只处理 401 刷新
     if (status !== 401) return Promise.reject(error);
 
     // 没有原请求 或 已经重试过，直接回登录
@@ -87,9 +96,8 @@ api.interceptors.response.use(
         refreshToken,
       });
 
-      // 兼容：后端可能返回 Result 包装：{code,message,data}
-      const body = refreshResp.data;
-      const payload = body && body.code !== undefined && body.data !== undefined ? body.data : body;
+      // ✅ 企业级：统一递归解包（兼容 ApiResponseAdvice + Result 双层包装）
+      const payload = unwrapDeep(refreshResp.data);
 
       const newAccessToken =
         payload?.accessToken || payload?.token || payload?.access_token;

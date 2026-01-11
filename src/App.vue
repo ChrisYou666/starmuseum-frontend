@@ -6,6 +6,7 @@
         <RouterLink to="/feed">Feed</RouterLink>
         <RouterLink to="/profile">Profile</RouterLink>
         <RouterLink to="/login" v-if="!isLoggedIn">Login</RouterLink>
+        <router-link v-if="isLoggedIn" class="btn" to="/astro/sky">Astro</router-link>
         <button v-if="isLoggedIn" class="btn" @click="logout">Logout</button>
       </nav>
     </header>

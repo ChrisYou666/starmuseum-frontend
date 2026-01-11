@@ -7,6 +7,7 @@ import Feed from "@/pages/social/Feed.vue";
 import PostDetail from "@/pages/social/PostDetail.vue";
 import CreatePost from "@/pages/social/CreatePost.vue";
 import Profile from "@/pages/me/Profile.vue";
+import Sky from "@/pages/astro/Sky.vue";
 
 const routes = [
   { path: "/", redirect: "/feed" },
@@ -18,7 +19,13 @@ const routes = [
   { path: "/post/create", name: "CreatePost", component: CreatePost, meta: { requiresAuth: true } },
   { path: "/post/:id", name: "PostDetail", component: PostDetail, meta: { requiresAuth: true } },
 
+  // Astro（阶段2）
+  { path: "/astro/sky", name: "AstroSky", component: Sky, meta: { requiresAuth: true } },
+
   { path: "/profile", name: "Profile", component: Profile, meta: { requiresAuth: true } },
+
+  // 可选：兜底（防止输入不存在的地址白屏）
+  { path: "/:pathMatch(.*)*", redirect: "/feed" },
 ];
 
 const router = createRouter({
@@ -29,12 +36,13 @@ const router = createRouter({
 // 路由守卫：未登录访问受保护页面 → 跳登录
 router.beforeEach((to) => {
   const auth = useAuthStore();
-
   if (!auth.initialized) auth.initFromStorage();
 
-  if (to.meta.public) return true;
+  // public 页面不需要登录
+  if (to.meta && to.meta.public) return true;
 
-  if (to.meta.requiresAuth && !auth.isLoggedIn) {
+  // 需要登录但没登录 → 跳登录，并带 redirect
+  if (to.meta && to.meta.requiresAuth && !auth.isLoggedIn) {
     return { name: "Login", query: { redirect: to.fullPath } };
   }
 

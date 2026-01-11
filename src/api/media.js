@@ -1,10 +1,7 @@
+// src/api/media.js
 import api from "@/api/request";
 import { ENDPOINTS } from "@/api/endpoints";
-
-function unwrap(res) {
-  if (res && typeof res === "object" && "code" in res && "data" in res) return res.data;
-  return res;
-}
+import { unwrapDeep } from "@/api/unwrap";
 
 // 原有：多图上传（发帖用）
 export async function uploadBatchMedia(files) {
@@ -17,7 +14,7 @@ export async function uploadBatchMedia(files) {
     })
     .then((r) => r.data);
 
-  return unwrap(res);
+  return unwrapDeep(res);
 }
 
 /**
@@ -40,5 +37,5 @@ export async function uploadAvatarMedia(file) {
     })
     .then((r) => r.data);
 
-  return unwrap(res);
+  return unwrapDeep(res);
 }
