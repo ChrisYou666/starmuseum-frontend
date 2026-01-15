@@ -1,142 +1,180 @@
+<!-- src/components/PostCard.vue -->
 <template>
-  <div class="cardWrap card" @click="emit('open')">
-    <div class="top">
-      <div class="avatar">
-        <img v-if="post.avatarUrl" :src="post.avatarUrl" />
-        <div v-else class="ph">{{ initials }}</div>
+  <div class="card sm-card" @click="goDetail">
+    <div class="meta">
+      <div class="author">
+        <img class="avatar" :src="post.avatarUrl || fallbackAvatar" />
+        <div>
+          <div class="name">{{ post.nickname || "Unknown" }}</div>
+          <div class="sub sm-small sm-muted">
+            <span>{{ formatTime(post.createdAt) }}</span>
+            <span class="dot">·</span>
+            <span>{{ post.visibility || "PUBLIC" }}</span>
+            <template v-if="locationText">
+              <span class="dot">·</span>
+              <span class="loc">📍 {{ locationText }}</span>
+            </template>
+          </div>
+        </div>
       </div>
 
-      <div class="meta">
-        <div class="name">{{ post.nickname || ("User#" + post.userId) }}</div>
-        <div class="time">{{ timeText }}</div>
-      </div>
-
-      <div class="right">
-        <span class="badge">{{ post.visibility || "PUBLIC" }}</span>
+      <div class="ops" @click.stop>
+        <button class="sm-btn mini" v-if="!post.liked" @click="$emit('like', post)">点赞</button>
+        <button class="sm-btn mini" v-else @click="$emit('unlike', post)">取消</button>
       </div>
     </div>
 
-    <div class="content" v-if="post.content">{{ post.content }}</div>
+    <div class="content">{{ post.content }}</div>
 
-    <ImageGrid :urls="mediaUrls" />
+    <div v-if="mediaUrls.length" class="media">
+      <img v-for="(u, idx) in mediaUrls" :key="idx" class="img" :src="u" />
+    </div>
 
-    <div class="actions" @click.stop>
-      <button class="btn" @click="onToggleLike">
-        {{ liked ? "❤️ 已赞" : "🤍 点赞" }} · {{ likeCount }}
-      </button>
-
-      <button class="btn ghost" @click="emit('open')">
-        💬 评论 · {{ post.commentCount ?? 0 }}
-      </button>
+    <div class="counts">
+      <span class="sm-chip">👍 {{ post.likeCount || 0 }}</span>
+      <span class="sm-chip">💬 {{ post.commentCount || 0 }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
-import ImageGrid from "@/components/ImageGrid.vue";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
   post: { type: Object, required: true },
 });
 
-const emit = defineEmits(["open", "like", "unlike"]);
+defineEmits(["like", "unlike"]);
 
-const liked = ref(!!props.post.liked);
-const likeCount = ref(props.post.likeCount ?? 0);
+const router = useRouter();
 
-watch(
-  () => props.post,
-  (p) => {
-    liked.value = !!p.liked;
-    likeCount.value = p.likeCount ?? 0;
-  },
-  { deep: true }
-);
+const fallbackAvatar =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23555'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-size='18' fill='%23ccc'%3EUser%3C/text%3E%3C/svg%3E";
 
-const initials = computed(() => {
-  const n = props.post.nickname || "";
-  return n ? n.slice(0, 1).toUpperCase() : "★";
-});
-
-const timeText = computed(() => {
-  const t = props.post.createdAt || props.post.created_at;
+function formatTime(t) {
   if (!t) return "";
-  return String(t).replace("T", " ").slice(0, 19);
+  const d = new Date(t);
+  if (Number.isNaN(d.getTime())) return String(t);
+  return d.toLocaleString();
+}
+
+function normalizeLocation(loc) {
+  if (!loc) return null;
+  const visibility = loc.visibility || loc.locationVisibility || loc.level || null;
+  const cityName = loc.cityName || loc.city || "";
+  const lat = loc.lat ?? loc.latitude ?? null;
+  const lon = loc.lon ?? loc.lng ?? loc.longitude ?? null;
+  return { visibility, cityName, lat, lon };
+}
+
+const locationText = computed(() => {
+  const loc = normalizeLocation(props.post.location);
+  if (!loc || !loc.visibility) return "";
+  if (loc.visibility === "HIDDEN") return "";
+  if (loc.visibility === "CITY") return loc.cityName ? loc.cityName : "城市";
+  if (loc.visibility === "FUZZY") return loc.cityName ? `${loc.cityName} 附近` : "某区域附近";
+  if (loc.visibility === "EXACT") {
+    if (loc.lat != null && loc.lon != null) return `${Number(loc.lat).toFixed(4)}, ${Number(loc.lon).toFixed(4)}`;
+    return loc.cityName ? loc.cityName : "精确位置";
+  }
+  return "";
 });
 
 const mediaUrls = computed(() => {
   const list = props.post.mediaList || props.post.media || [];
-  // 兼容：后端可能返回 thumbUrl/mediumUrl/url
-  return (list || [])
-    .map((m) => m.thumbUrl || m.url || m.mediumUrl)
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((m) => m.mediumUrl || m.thumbUrl || m.originUrl || m.url)
     .filter(Boolean)
     .slice(0, 9);
 });
 
-async function onToggleLike() {
-  if (liked.value) {
-    liked.value = false;
-    likeCount.value = Math.max(0, likeCount.value - 1);
-    emit("unlike");
-  } else {
-    liked.value = true;
-    likeCount.value += 1;
-    emit("like");
-  }
+function goDetail() {
+  router.push({ name: "PostDetail", params: { id: props.post.id } });
 }
 </script>
 
 <style scoped>
-.cardWrap {
+.card {
   padding: 14px;
-  border-radius: 18px;
+  cursor: pointer;
 }
-.top {
+
+.meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 10px;
 }
+
+.author {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .avatar {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(0,0,0,0.20);
-  display: grid;
-  place-items: center;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ph { font-weight: 800; opacity: 0.9; }
 
-.meta { flex: 1; min-width: 0; }
-.name { font-weight: 800; }
-.time { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+.name {
+  font-weight: 800;
+}
 
-.badge {
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.75);
+.sub {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dot {
+  color: rgba(255, 255, 255, 0.35);
+}
+.loc {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ops {
+  display: flex;
+  gap: 8px;
+}
+
+.sm-btn.mini {
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .content {
-  margin-top: 10px;
-  line-height: 1.6;
+  margin-top: 12px;
   white-space: pre-wrap;
-  word-break: break-word;
+  line-height: 1.5;
 }
 
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  flex-wrap: wrap;
+.media {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
-.btn.ghost {
-  background: rgba(255,255,255,0.04);
+.img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.counts {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 </style>

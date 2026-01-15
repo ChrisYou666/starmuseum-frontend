@@ -1,100 +1,124 @@
+<!-- src/components/CommentItem.vue -->
 <template>
-  <div class="item">
-    <div class="avatar">
-      <img v-if="c.avatarUrl" :src="c.avatarUrl" />
-      <div v-else class="ph">{{ initials }}</div>
-    </div>
+  <div class="c sm-card">
+    <div class="top">
+      <div class="user">
+        <img class="avatar" :src="comment.avatarUrl || fallbackAvatar" />
+        <div>
+          <div class="name">{{ comment.nickname || "Unknown" }}</div>
+          <div class="sm-muted sm-small">{{ formatTime(comment.createdAt) }}</div>
+        </div>
+      </div>
 
-    <div class="main">
-      <div class="row">
-        <div class="name">{{ c.nickname || ("User#" + c.userId) }}</div>
-        <div class="time">{{ timeText }}</div>
-
-        <button
-          v-if="canDelete"
-          class="btn danger"
-          @click.stop="emit('delete')"
-          title="删除评论"
-        >
+      <div class="ops">
+        <button class="sm-btn mini" @click="openReport">举报</button>
+        <button v-if="canDelete" class="sm-btn mini danger" @click="$emit('delete', comment)">
           删除
         </button>
       </div>
-
-      <div class="content">{{ c.content }}</div>
     </div>
+
+    <div class="content">{{ comment.content }}</div>
+
+    <ReportDialog
+      v-model:open="reportOpen"
+      targetType="COMMENT"
+      :targetId="comment.id"
+      @success="onReportSuccess"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import { notify } from "@/utils/notify";
 
 const props = defineProps({
-  c: { type: Object, required: true },
-  myUserId: { type: [Number, String], default: null },
+  comment: { type: Object, required: true },
+  me: { type: Object, default: null },
 });
 
-const emit = defineEmits(["delete"]);
+defineEmits(["delete"]);
+
+const reportOpen = ref(false);
+
+const fallbackAvatar =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23555'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-size='18' fill='%23ccc'%3EUser%3C/text%3E%3C/svg%3E";
+
+function formatTime(t) {
+  if (!t) return "";
+  const d = new Date(t);
+  if (Number.isNaN(d.getTime())) return String(t);
+  return d.toLocaleString();
+}
 
 const canDelete = computed(() => {
-  if (!props.myUserId) return false;
-  return String(props.c.userId) === String(props.myUserId);
+  const myId = props.me?.id;
+  const uid = props.comment.userId;
+  return myId != null && uid != null && String(myId) === String(uid);
 });
 
-const initials = computed(() => {
-  const n = props.c.nickname || "";
-  return n ? n.slice(0, 1).toUpperCase() : "★";
-});
+function openReport() {
+  reportOpen.value = true;
+}
 
-const timeText = computed(() => {
-  const t = props.c.createdAt || props.c.created_at;
-  if (!t) return "";
-  return String(t).replace("T", " ").slice(0, 19);
-});
+function onReportSuccess() {
+  notify("已提交举报", "success");
+}
 </script>
 
 <style scoped>
-.item {
-  display: flex;
-  gap: 10px;
+.c {
   padding: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(0,0,0,0.16);
 }
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(0,0,0,0.20);
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-}
-.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ph { font-weight: 800; opacity: 0.9; }
 
-.main { flex: 1; min-width: 0; }
-.row {
+.top {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 10px;
 }
-.name { font-weight: 800; }
-.time { font-size: 12px; color: rgba(255,255,255,0.6); }
-.content {
-  margin-top: 6px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.55;
+
+.user {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-.btn.danger {
-  margin-left: auto;
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.name {
+  font-weight: 800;
+}
+
+.ops {
+  display: flex;
+  gap: 8px;
+}
+
+.sm-btn.mini {
   padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(255,77,109,0.12);
-  border-color: rgba(255,77,109,0.35);
+  font-size: 12px;
+}
+
+.sm-btn.danger {
+  border-color: rgba(255, 0, 0, 0.22);
+  background: rgba(255, 0, 0, 0.10);
+  color: rgba(255, 200, 200, 0.95);
+}
+.sm-btn.danger:hover {
+  background: rgba(255, 0, 0, 0.14);
+}
+
+.content {
+  margin-top: 10px;
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
 </style>

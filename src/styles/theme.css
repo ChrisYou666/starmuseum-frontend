@@ -1,0 +1,130 @@
+/* src/styles/theme.css */
+/* 星空博物馆 - 暗色玻璃主题（方案A） */
+
+:root {
+  /* 背景与文字 */
+  --sm-text: rgba(255, 255, 255, 0.92);
+  --sm-text-muted: rgba(255, 255, 255, 0.68);
+  --sm-text-faint: rgba(255, 255, 255, 0.50);
+
+  /* 玻璃卡片 */
+  --sm-card-bg: rgba(255, 255, 255, 0.08);
+  --sm-card-border: rgba(255, 255, 255, 0.14);
+  --sm-card-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+
+  /* 控件 */
+  --sm-input-bg: rgba(255, 255, 255, 0.10);
+  --sm-input-border: rgba(255, 255, 255, 0.16);
+  --sm-input-focus: rgba(255, 255, 255, 0.28);
+
+  /* 按钮 */
+  --sm-btn-bg: rgba(255, 255, 255, 0.10);
+  --sm-btn-border: rgba(255, 255, 255, 0.18);
+  --sm-btn-bg-hover: rgba(255, 255, 255, 0.14);
+
+  /* 主按钮（浅色实心） */
+  --sm-primary-bg: rgba(255, 255, 255, 0.92);
+  --sm-primary-text: rgba(10, 12, 16, 0.95);
+
+  /* 危险/错误 */
+  --sm-danger-bg: rgba(255, 0, 0, 0.10);
+  --sm-danger-border: rgba(255, 0, 0, 0.22);
+  --sm-danger-text: rgba(255, 180, 180, 0.95);
+
+  /* 圆角 */
+  --sm-radius: 16px;
+  --sm-radius-sm: 12px;
+}
+
+/* 通用：卡片 */
+.sm-card {
+  background: var(--sm-card-bg);
+  border: 1px solid var(--sm-card-border);
+  border-radius: var(--sm-radius);
+  box-shadow: var(--sm-card-shadow);
+  color: var(--sm-text);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 通用：按钮 */
+.sm-btn {
+  background: var(--sm-btn-bg);
+  border: 1px solid var(--sm-btn-border);
+  color: var(--sm-text);
+  padding: 8px 12px;
+  border-radius: var(--sm-radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sm-btn:hover {
+  background: var(--sm-btn-bg-hover);
+}
+.sm-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 主按钮 */
+.sm-btn.primary {
+  background: var(--sm-primary-bg);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: var(--sm-primary-text);
+}
+.sm-btn.primary:hover {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* 通用：输入框/下拉/文本域 */
+.sm-input,
+.sm-select,
+.sm-textarea {
+  width: 100%;
+  background: var(--sm-input-bg);
+  border: 1px solid var(--sm-input-border);
+  color: var(--sm-text);
+  border-radius: var(--sm-radius-sm);
+  padding: 10px 12px;
+  outline: none;
+}
+.sm-textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+.sm-input::placeholder,
+.sm-textarea::placeholder {
+  color: var(--sm-text-faint);
+}
+
+.sm-input:focus,
+.sm-select:focus,
+.sm-textarea:focus {
+  border-color: var(--sm-input-focus);
+}
+
+/* 文案辅助 */
+.sm-muted {
+  color: var(--sm-text-muted);
+}
+.sm-small {
+  font-size: 12px;
+}
+
+/* 通用：错误条 */
+.sm-error {
+  padding: 10px 12px;
+  border: 1px solid var(--sm-danger-border);
+  border-radius: var(--sm-radius-sm);
+  background: var(--sm-danger-bg);
+  color: var(--sm-danger-text);
+}
+
+/* 通用：chip */
+.sm-chip {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sm-text);
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}

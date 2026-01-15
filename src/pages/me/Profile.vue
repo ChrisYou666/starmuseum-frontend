@@ -5,9 +5,15 @@
         <h1>Profile</h1>
         <div class="help">个人资料 / 头像 / 隐私设置</div>
       </div>
-      <button class="btn" :disabled="loading" @click="reload">
-        {{ loading ? "加载中..." : "刷新" }}
-      </button>
+
+      <!-- ✅ 这里改成按钮组：刷新 + 我的举报 + 我的拉黑 -->
+      <div class="headOps">
+        <button class="btn" :disabled="loading" @click="reload">
+          {{ loading ? "加载中..." : "刷新" }}
+        </button>
+        <button class="btn" @click="goMyReports">我的举报</button>
+        <button class="btn" @click="goMyBlocks">我的拉黑</button>
+      </div>
     </div>
 
     <div v-if="error" class="alert error">{{ error }}</div>
@@ -88,12 +94,14 @@
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router"; // ✅ 新增
 import { useAuthStore } from "@/stores/auth";
 import { getMe, updateAvatar, updatePrivacy, updateProfile } from "@/api/me";
 import api from "@/api/request";
 import { ENDPOINTS } from "@/api/endpoints";
 
 const auth = useAuthStore();
+const router = useRouter(); // ✅ 新增
 
 const loading = ref(false);
 const saving = ref(false);
@@ -123,6 +131,7 @@ function setOk(msg) {
   ok.value = msg;
   setTimeout(() => (ok.value = ""), 1200);
 }
+
 function setError(msg) {
   error.value = msg;
   setTimeout(() => (error.value = ""), 2500);
@@ -131,6 +140,14 @@ function setError(msg) {
 function unwrap(res) {
   if (res && typeof res === "object" && "code" in res && "data" in res) return res.data;
   return res;
+}
+
+/** ✅ 新增：入口跳转 */
+function goMyReports() {
+  router.push("/me/reports");
+}
+function goMyBlocks() {
+  router.push("/me/blocks");
 }
 
 async function reload() {
@@ -143,7 +160,6 @@ async function reload() {
     form.nickname = me.nickname ?? "";
     form.avatarUrl = me.avatarUrl ?? "";
 
-    // 如果后端把隐私也一起返回，兼容读取
     if (me.privacy) {
       privacy.postVisibilityDefault =
         me.privacy.postVisibilityDefault ?? me.privacy.defaultVisibility ?? privacy.postVisibilityDefault;
@@ -168,11 +184,6 @@ function onPickAvatar(e) {
 }
 
 function parseUploadResp(resp) {
-  // 兼容常见返回结构：
-  // 1) [{id, originUrl, ...}]
-  // 2) [id1, id2]
-  // 3) {ids:[...]}
-  // 4) {records:[...]}
   if (Array.isArray(resp)) {
     const first = resp[0];
     if (typeof first === "object") {
@@ -190,13 +201,6 @@ function parseUploadResp(resp) {
   return { id: null, url: "" };
 }
 
-/**
- * 关键：头像上传必须让后端把 media.type 识别为 AVATAR
- * 我们同时用两种方式告诉后端：
- * - query: ?type=AVATAR
- * - form:  type=AVATAR
- * 并且同时 append files/file 两个字段名，适配不同实现
- */
 async function uploadAvatarMedia(file) {
   const fd = new FormData();
   fd.append("files", file);
@@ -219,14 +223,11 @@ async function saveAvatar() {
 
   avatarSaving.value = true;
   try {
-    // ✅ 第一步：上传 media（type=AVATAR）
     const uploadResp = await uploadAvatarMedia(pickedAvatar.value);
     const { id: mediaId, url } = parseUploadResp(uploadResp);
 
     if (!mediaId) throw new Error("媒体上传成功但没有返回 mediaId");
 
-    // ✅ 第二步：PUT /api/iam/me/avatar（JSON）
-    // 常见字段名：avatarMediaId / mediaId / avatarUrl
     await updateAvatar({
       avatarMediaId: mediaId,
       mediaId: mediaId,
@@ -261,10 +262,7 @@ async function savePrivacy() {
   privacySaving.value = true;
   try {
     await updatePrivacy({
-      // ✅ 对齐后端必填字段
       postVisibilityDefault: privacy.postVisibilityDefault,
-
-      // 兼容别名（后端会忽略未知字段）
       defaultVisibility: privacy.postVisibilityDefault,
 
       allowViewProfile: privacy.allowViewProfile,
@@ -291,7 +289,19 @@ onMounted(reload);
   gap: 12px;
   margin: 18px 0 12px 0;
 }
-h1 { margin: 0; font-size: 34px; }
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+}
+
+/* ✅ 新增：按钮组样式 */
+.headOps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 .grid {
   display: grid;
@@ -300,34 +310,65 @@ h1 { margin: 0; font-size: 34px; }
   margin-bottom: 22px;
 }
 @media (max-width: 900px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.box { padding: 14px; border-radius: 18px; }
+.box {
+  padding: 14px;
+  border-radius: 18px;
+}
 
-.secTitle { font-weight: 900; margin-bottom: 12px; }
+.secTitle {
+  font-weight: 900;
+  margin-bottom: 12px;
+}
 
-.field { display: grid; gap: 6px; margin-top: 10px; }
+.field {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
 
-.actions { margin-top: 14px; display: flex; justify-content: flex-end; }
+.actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
 
 .avatarRow {
   display: flex;
   gap: 12px;
   align-items: center;
 }
+
 .avatar {
   width: 76px;
   height: 76px;
   border-radius: 22px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.2);
   display: grid;
   place-items: center;
 }
-.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ph { font-weight: 900; font-size: 22px; opacity: 0.9; }
 
-.avatarOps { display: grid; gap: 8px; }
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ph {
+  font-weight: 900;
+  font-size: 22px;
+  opacity: 0.9;
+}
+
+.avatarOps {
+  display: grid;
+  gap: 8px;
+}
 </style>
