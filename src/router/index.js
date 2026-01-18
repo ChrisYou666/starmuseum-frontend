@@ -4,18 +4,33 @@ import { useAuthStore } from "@/stores/auth";
 
 import Login from "@/pages/auth/Login.vue";
 import Register from "@/pages/auth/Register.vue";
+
 import Feed from "@/pages/social/Feed.vue";
 import PostDetail from "@/pages/social/PostDetail.vue";
 import CreatePost from "@/pages/social/CreatePost.vue";
-import Profile from "@/pages/me/Profile.vue";
-import Sky from "@/pages/astro/Sky.vue";
 
+import Profile from "@/pages/me/Profile.vue";
 import Blocks from "@/pages/me/Blocks.vue";
 import MyReports from "@/pages/me/MyReports.vue";
 import MyReportDetail from "@/pages/me/MyReportDetail.vue";
+
 import UserProfile from "@/pages/user/Profile.vue";
 
-// ✅ 管理端（阶段D）
+import Sky from "@/pages/astro/Sky.vue";
+
+// ===== 阶段5 =====
+import AstroDeviceProfiles from "@/pages/astro/DeviceProfiles.vue";
+import AstroFov from "@/pages/astro/Fov.vue";
+
+// ✅ F4：观测日志
+import ObservationLogs from "@/pages/observation/ObservationLogs.vue";
+import ObservationLogCreate from "@/pages/observation/ObservationLogCreate.vue";
+import ObservationLogDetail from "@/pages/observation/ObservationLogDetail.vue";
+import ObservationLogEdit from "@/pages/observation/ObservationLogEdit.vue";
+
+import Stats from "@/pages/stats/Stats.vue";
+
+// ✅ 管理端
 import AdminReports from "@/pages/admin/AdminReports.vue";
 import AdminReportDetail from "@/pages/admin/AdminReportDetail.vue";
 import AdminAudit from "@/pages/admin/AdminAudit.vue";
@@ -33,6 +48,18 @@ const routes = [
   { path: "/user/:id", name: "UserProfile", component: UserProfile, meta: { requiresAuth: true } },
 
   { path: "/astro/sky", name: "AstroSky", component: Sky, meta: { requiresAuth: true } },
+
+  // ===== 阶段5：设备配置 / FOV =====
+  { path: "/astro/device-profiles", name: "AstroDeviceProfiles", component: AstroDeviceProfiles, meta: { requiresAuth: true } },
+  { path: "/astro/fov", name: "AstroFov", component: AstroFov, meta: { requiresAuth: true } },
+
+  // ===== 阶段5：F4 观测日志 =====
+  { path: "/observation/logs", name: "ObservationLogs", component: ObservationLogs, meta: { requiresAuth: true } },
+  { path: "/observation/logs/create", name: "ObservationLogCreate", component: ObservationLogCreate, meta: { requiresAuth: true } },
+  { path: "/observation/logs/:id", name: "ObservationLogDetail", component: ObservationLogDetail, meta: { requiresAuth: true } },
+  { path: "/observation/logs/:id/edit", name: "ObservationLogEdit", component: ObservationLogEdit, meta: { requiresAuth: true } },
+
+  { path: "/stats", name: "Stats", component: Stats, meta: { requiresAuth: true } },
 
   { path: "/profile", name: "Profile", component: Profile, meta: { requiresAuth: true } },
 
